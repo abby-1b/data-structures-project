@@ -12,7 +12,7 @@ public class Seat {
     public Seat() {}
 
     private static String displayIdFromNumber(int number) {
-        return "" + ('A' + (number % 25)) + (number / 25 + 1);
+        return "" + (char)('A' + (number % 25)) + (number / 25 + 1);
     }
 
     @Override
