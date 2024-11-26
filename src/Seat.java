@@ -17,7 +17,7 @@ public class Seat {
 
     @Override
     public String toString() {
-        return "[" + section + "] Number: " + number + " (" + displayIdFromNumber(this.number) + ")";
+        return section + " Seat: " + displayIdFromNumber(this.number);
     }
 
     public static String toStringFromNumber(int number) {
