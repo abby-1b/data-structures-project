@@ -1,20 +1,61 @@
 package src;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Scanner;
+import java.util.Stack;
 
 public class StadiumSeats {
+    static Client currClient = new Client();
     static SeatSection fieldSeats = new SeatSection("Field", 300, 500);
     static SeatSection mainSeats = new SeatSection("Main", 120, 1000);
     static SeatSection grandStandSeats = new SeatSection("GrandStand", 45, 2000);
 
     static HashMap<Client, Seat> takenSeats = new HashMap<>();
+    static LinkedList<Log> history = new LinkedList<>();
+    static Stack<Log> clientHistory = new Stack<>();
 
     public static void setupSeats() {
         //TODO: create seats
     }
 
+    public static void undoPurchase() {
+        //TODO: undo most recent purchase for the current client
+    }
+
     public static void menu() {
-        // TODO: add the menu options
+        String outline = "---------------------------------------";
+        System.out.println("/" + outline + "Menu" + outline + "/" + "\n");
+        System.out.println("Welcome!");
+
+        Scanner s = new Scanner(System.in);
+        //boolean selecting = true; // just in case we want to keep selecting after done with an option
+        while (true) {
+            
+            System.out.println(
+                "\nEnter the appropriate number for the acction you want to perform:" +
+                "\n(1) Purcahse Seat" +
+                "\n(2) View Available Seats" +
+                "\n(3) Undo Purchase" + 
+                "\n(4) Change account" +
+                "\n(5) Exit"
+            );
+            String selection = s.nextLine();
+
+            if (selection == null || selection.trim().isEmpty()) {
+                System.out.println("Please enter a valid option.");
+                continue;
+            }
+
+            switch (selection) {
+                case "1" -> { purchaseSeat(); /*selecting = false;*/ }
+                case "2" -> { displayAvailability(); /*selecting = false;*/ }
+                case "3" -> { /* TODO: Implement undo function */ /*selecting = false;*/ }
+                case "4" -> { currClient = getClientInformation(); /*selecting = false;*/ }
+                case "5" -> { s.close(); return; }
+                default -> { System.out.println("Please enter a valid option."); }
+            }
+        }  
+
     }
 
     public static void displayAvailability() {
@@ -35,7 +76,7 @@ public class StadiumSeats {
 
         Client c = new Client(name, email, number);
 
-        s.close();
+        clientHistory = new Stack<>();
 
         return c;
     }
@@ -62,8 +103,8 @@ public class StadiumSeats {
         Scanner s = new Scanner(System.in);
         while (true) {
             switch (s.nextLine().toLowerCase()) {
-                case "yes", "y" -> { s.close(); return true ; }
-                case "no" , "n" -> { s.close(); return false; }
+                case "yes", "y" -> { return true ; }
+                case "no" , "n" -> { return false; }
                 default -> System.out.println("Please enter a valid option. (Y/N)");
             }
         }
@@ -73,13 +114,11 @@ public class StadiumSeats {
         Scanner s = new Scanner(System.in);
 
         System.out.println("Which seat would you like to purchase?");
-        System.out.println("Enter the number for the seat you want to purchase (e.g. 1 for a Field seat) or enter 0 to exit.");
+        System.out.println("Enter the number for the seat you want to purchase (e.g. 1 for a Field seat) or enter 0 to exit.\n");
 
-        System.out.println();
-
-        System.out.print("(1) " + fieldSeats);
-        System.out.print("(2) " + mainSeats);
-        System.out.print("(3) " + grandStandSeats);
+        System.out.print("(1) " + fieldSeats + "\n");
+        System.out.print("(2) " + mainSeats + "\n");
+        System.out.print("(3) " + grandStandSeats + "\n");
 
         SeatSection selectedSection = null;
         boolean selecting = true;
@@ -111,8 +150,9 @@ public class StadiumSeats {
         // purchaseSeat();
         // pickSeat("Main");
 
-        Seat s = new Seat(fieldSeats, 99);
-        System.out.println(s);
+        // Seat s = new Seat(fieldSeats, 99);
+        // System.out.println(s);
+        menu();
     }
 
 }
