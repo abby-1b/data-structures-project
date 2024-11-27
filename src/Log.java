@@ -12,6 +12,6 @@ public class Log {
     public Client getClient() { return client; }
     public Seat getSeat() { return seat; }
     public int getSeatNum() { return seat.number; }
-    public double getSeatCost() { return seat.section.getCost(); }
+    // public double getSeatCost() { return seat.section.getCost(); }
 
 }

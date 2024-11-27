@@ -12,15 +12,14 @@ public class Client {
         this.number = number;
     }
 
-    Client() {
-        this.name = "name";
-        this.email = "email@mail.com";
-        this.number = "000-000-0001";
-    }
-
     void printData() {
         System.out.println("Name: " + name);
         System.out.println("Email: " + email);
         System.out.println("Phone: " + number);
+    }
+
+    @Override
+    public String toString() {
+        return this.name;
     }
 }
