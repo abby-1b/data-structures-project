@@ -28,7 +28,7 @@ public class SeatSection {
         }
     }
 
-    public void pickSeat(Scanner scanner, Client client) {
+    public Seat pickSeat(Scanner scanner, Client client) {
         if (this.getRemaining() < 0) {
             System.out.println("Sorry, there is no more space in the requested section.");
             askForWaitlist(scanner, client);
@@ -41,7 +41,7 @@ public class SeatSection {
             // Input row
             System.out.print("Enter the row of your seat (A-Y); or enter Z to exit: ");
             row = scanner.nextLine().charAt(0);
-            if (row == 'z' || row == 'Z') return;
+            if (row == 'z' || row == 'Z') return null;
             while (row < 'A' || row > 'Y') {
                 System.out.print("Try again, enter the row of your seat (A-Y): ");
                 row = scanner.nextLine().charAt(0);
@@ -64,7 +64,7 @@ public class SeatSection {
                 continue;
             } else {
                 System.out.println("Successfully purchased " + reservedSeat);
-                break;
+                return reservedSeat;
             }
 
         }

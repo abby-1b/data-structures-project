@@ -85,6 +85,7 @@ public class StadiumSeats {
             } else {
                 cancelReservationHelper(client, seatToRemove);
                 System.out.println("You have canceled you reservation for: " + seatToRemove);
+                section.updateWaitlist();
                 break;
             }
         }
@@ -233,10 +234,16 @@ public class StadiumSeats {
         //         default -> { System.out.println("Please enter a valid option."); continue; }
         //     }
         // }
+
        SeatSection selectedSection = getSection();
        if(selectedSection == null) return;
 
-       selectedSection.pickSeat(scanner, client);
+       Seat reservation = selectedSection.pickSeat(scanner, client);
+       if (reservation != null)  {
+        history.add(new Log(client, reservation, TransactionType.PURCHASE));
+        client.reservedSeats.add(reservation);
+       }
+
     }
 
     public static void main(String[] args) {
