@@ -1,9 +1,9 @@
 package src;
 
 public class Log {
-    public enum TransactionType{
+    public enum TransactionType {
         PURCHASE,
-        CANCEL
+        CANCEL,
     }
 
     private Client client;
@@ -19,6 +19,17 @@ public class Log {
     public Client getClient() { return client; }
     public Seat getSeat() { return seat; }
     public int getSeatNum() { return seat.number; }
-    // public double getSeatCost() { return seat.section.getCost(); }
+    public TransactionType getType() { return this.type; }
 
+    @Override
+    public String toString() {
+        String out = "[" + this.client + "] ";
+        if (this.type == TransactionType.PURCHASE) {
+            out += "purchased";
+        } else {
+            out += "canceled";
+        }
+        out += this.seat;
+        return out;
+    }
 }

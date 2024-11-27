@@ -1,5 +1,6 @@
 package src;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.Stack;
@@ -17,16 +18,110 @@ public class StadiumSeats {
 
     static Scanner scanner;
 
-    public static void undoPurchase(Client client) {
-      if(!client.reservedSeats.isEmpty()){
-        cancelReservationHelper(client, client.reservedSeats.peek());
-        System.out.println("You have canceled your reservation for : " + client.reservedSeats.peek());
-      }
-      else{
-        System.out.println("No action to perform.");
-      }
+    private static void printMenuHeader(String head) {
+        String outline = "---------------------------------------";
+        System.out.println("/" + outline + head + outline + "/" + "\n");
     }
-      public static SeatSection getSection() {
+
+    public static void menu() {
+        Client currClient = getClientInformation();
+
+        System.out.println("\nWelcome, " + currClient +  "!");
+
+        while (true) {
+            printMenuHeader("Menu");
+
+            System.out.println(
+                "Enter the appropriate number for the action you want to perform:\n" +
+                "(0) Exit\n" +
+                "(1) Purchase Seat\n" +
+                "(2) View Available Seats\n" +
+                "(3) Cancel Reservation\n" +
+                "(4) Undo\n" +
+                "(5) Change Account\n" +
+                "(6) View logs\n"
+            );
+            String selection = scanner.nextLine();
+
+            if (selection == null || selection.trim().isEmpty()) {
+                System.out.println("Please enter a valid option.");
+                continue;
+            }
+
+            switch (selection) {
+                case "0" -> { return; }
+                case "1" -> {
+                    printMenuHeader("Purchase Seat");
+                    purchaseSeat(currClient);
+                }
+                case "2" -> {
+                    printMenuHeader("View Available Seats");
+                    displayAvailability();
+                }
+                case "3" -> {
+                    printMenuHeader("Cancel Reservation");
+                    cancelReservation(currClient);
+                }
+                case "4" -> {
+                    printMenuHeader("Undo");
+                    currClient.undo();
+                }
+                case "5" -> {
+                    printMenuHeader("Change Account");
+                    currClient = getClientInformation();
+                }
+                case "6" -> {
+                    printMenuHeader("Logs");
+                    showLogs();
+                }
+                default -> { System.out.println("Please enter a valid option."); }
+            }
+
+            System.out.println("Press enter to continue...");
+            scanner.nextLine();
+        }  
+
+    }
+
+    public static boolean askYesNo(String question) {
+        while (true) {
+            System.out.println(question);
+            switch (scanner.nextLine().toLowerCase()) {
+                case "yes", "y" -> { return true; }
+                case "no", "n" -> { return false; }
+                default -> System.out.println("Please enter a valid option. (Y/N)");
+            }
+        }
+    }
+
+    public static void showLogs() {
+        int logCount = history.size();
+        int showLogs = 0;
+        if (logCount > 10) {
+            System.out.print("How many logs would you like to see? (0-" + logCount + "): ");
+            try { showLogs = Integer.parseInt(scanner.nextLine()); } catch (Exception e) {}
+            while (showLogs < 1 || showLogs > logCount) {
+                System.out.print("Try again, how many logs would you like to see? (0-" + logCount + "): ");
+                try { showLogs = Integer.parseInt(scanner.nextLine()); } catch (Exception e) {}
+            }
+        } else {
+            showLogs = logCount;
+        }
+
+        Iterator<Log> iter = history.descendingIterator();
+        for (int i = 0; i < showLogs; i++) {
+            System.out.println(iter.next());
+        }
+    }
+
+    public static void displayAvailability() {
+        fieldSeats.displayAvailability();
+        mainSeats.displayAvailability();
+        grandStandSeats.displayAvailability();
+    }
+
+    public static SeatSection getSection(String message) {
+        System.out.println(message);
         System.out.println("(0) Cancel");
         System.out.println("(1) " + fieldSeats);
         System.out.println("(2) " + mainSeats);
@@ -48,132 +143,15 @@ public class StadiumSeats {
     }
 
     public static void cancelReservation(Client client) {
-        System.out.println("Enter the section of the seat you would like to cancel.");
-        SeatSection section = getSection();
+        SeatSection section = getSection("Enter the section of the seat you'd like to cancel:");
         if (section == null) return;
-
-        while (true) {
-            char row = '#';
-            int col = -1;
-
-            System.out.println("Enter the information of the seat you would like to cancel: ");
-
-            // Input row
-            System.out.print("Enter the row of your seat (A-Y); or enter 'Z' to exit: ");
-            row = scanner.nextLine().charAt(0);
-
-            if (row == 'z' || row == 'Z') return;
-
-            while (row < 'A' || row > 'Y') {
-                System.out.print("Try again, enter the row of your seat (A-Y): ");
-                row = scanner.nextLine().charAt(0);
-            }
-    
-            // Input column
-            int maxColumn = section.getCapacity() / 25;
-            System.out.print("Enter the number of your seat (1-" + maxColumn + "): ");
-            try { col = Integer.parseInt(scanner.nextLine()); } catch (Exception e) {}
-            while (col < 1 || col > maxColumn) {
-                System.out.print("Try again, enter the number of your seat (1-" + maxColumn + "): ");
-                try { col = Integer.parseInt(scanner.nextLine()); } catch (Exception e) {}
-            }
-
-            // Ensure the seat is available
-            int number = Seat.numberFrom(row, col);
-            Seat seatToRemove = section.containsSeat(client, number);
-            if (seatToRemove == null) {
-                System.out.println("This seat has not been reserved.");
-            } else {
-                System.out.println("You have canceled you reservation for: " + seatToRemove);
-                cancelReservationHelper(client, seatToRemove);
-                break;
-            }
-        }
+        section.cancelReservation(scanner, client);
     }
 
-    public static void cancelReservationHelper(Client client, Seat seat) {
-        Stack<Seat> tempStack = new Stack<>();
-        for (int i = 0; i < client.reservedSeats.size(); i++) {
-            if (client.reservedSeats.peek() == seat) {
-                client.reservedSeats.pop();
-            }
-
-            tempStack.add(client.reservedSeats.pop());
-        }
-
-        while (!tempStack.isEmpty()) {
-            client.reservedSeats.add(tempStack.pop());
-        }
-
-        seat.section.availableSeats.add(seat);
-        seat.section.takenSeats.get(client).remove(seat);
-        history.add(new Log(client, seat, TransactionType.CANCEL));
-
-    }
-
-    
-
-    public static void menu() {
-        Client currClient = getClientInformation();
-
-        String outline = "---------------------------------------";
-        System.out.println("/" + outline + "Menu" + outline + "/" + "\n");
-        System.out.println("Welcome, " + currClient +  "!");
-
-        //boolean selecting = true; // just in case we want to keep selecting after done with an option
-        while (true) {
-            System.out.println(
-                "\nEnter the appropriate number for the action you want to perform:" +
-                "\n(0) Exit" +
-                "\n(1) Purchase Seat" +
-                "\n(2) View Available Seats" +
-                "\n(3) Cancel Reservation" + 
-                "\n(4) Undo Purchase" + 
-                "\n(5) Change Account"
-            );
-            String selection = scanner.nextLine();
-
-            if (selection == null || selection.trim().isEmpty()) {
-                System.out.println("Please enter a valid option.");
-                continue;
-            }
-
-            switch (selection) {
-                case "0" -> {
-                    return;
-                }
-                case "1" -> {
-                    System.out.println("/" + outline + "Purchase Seat" + outline + "/" + "\n");
-                    purchaseSeat(currClient);
-                }
-                case "2" -> {
-                    System.out.println("/" + outline + "View Available Seats" + outline + "/");
-                    displayAvailability();
-                }
-                case "3" -> {
-                    System.out.println("/" + outline + "Cancel Reservation" + outline + "/");
-                    cancelReservation(currClient);
-                }
-                case "4" -> {
-                    System.out.println("/" + outline + "Undo Purchase" + outline + "/");
-                    undoPurchase(currClient);
-                }
-                case "5" -> {
-                    System.out.println("/" + outline + "Change Account" + outline + "/");
-                    currClient = getClientInformation();
-                }
-                default -> {
-                    System.out.println("Please enter a valid option.");
-                }
-            }
-        }  
-
-    }
-
-    public static void displayAvailability() {
-        fieldSeats.displayAvailability();
-        mainSeats.displayAvailability();
-        grandStandSeats.displayAvailability();
+    public static void purchaseSeat(Client client) {
+        SeatSection section = getSection("Enter the section of the seat you'd like to reserve:");
+        if (section == null) return;
+        section.reserveSeat(scanner, client);
     }
 
     public static Client getClientInformation() {
@@ -198,45 +176,6 @@ public class StadiumSeats {
         }
 
 
-    }
-
-    static boolean purchaseConfirmation(Seat seat) {
-        System.out.println("Would you like to proceed with your purchase of: ");
-        System.out.println(seat + " (Y/N)");
-
-        while (true) {
-            switch (scanner.nextLine().toLowerCase()) {
-                case "yes", "y" -> { return true ; }
-                case "no" , "n" -> { return false; }
-                default -> System.out.println("Please enter a valid option. (Y/N)");
-            }
-        }
-    }
-
-    public static void purchaseSeat(Client client) {
-        // System.out.println("Which seat would you like to purchase?");
-        // System.out.println("Enter the number for the seat you want to purchase (e.g. 1 for a Field seat) or enter 0 to exit.\n");
-
-        // System.out.println("(0) Cancel");
-        // System.out.println("(1) " + fieldSeats);
-        // System.out.println("(2) " + mainSeats);
-        // System.out.println("(3) " + grandStandSeats);
-
-        // SeatSection selectedSection = null;
-        // boolean selecting = true;
-        // while (selecting) {
-        //     switch (scanner.nextLine()) {
-        //         case "0" -> { return; }
-        //         case "1" -> { selectedSection = fieldSeats; selecting = false; }
-        //         case "2" -> { selectedSection = mainSeats; selecting = false; }
-        //         case "3" -> { selectedSection = grandStandSeats; selecting = false; }
-        //         default -> { System.out.println("Please enter a valid option."); continue; }
-        //     }
-        // }
-       SeatSection selectedSection = getSection();
-       if(selectedSection == null) return;
-
-       selectedSection.pickSeat(scanner, client);
     }
 
     public static void main(String[] args) {

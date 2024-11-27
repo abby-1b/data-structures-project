@@ -1,11 +1,11 @@
 package src;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Scanner;
-import java.util.Stack;
+
+import src.Log.TransactionType;
 
 public class SeatSection {
     private String level;
@@ -13,7 +13,7 @@ public class SeatSection {
     private int capacity;
 
     public HashSet<Seat> availableSeats = new HashSet<>();
-    public HashMap<Client, ArrayList<Seat>> takenSeats = new HashMap<>();
+    public HashMap<Client, HashSet<Seat>> takenSeats = new HashMap<>();
 
     public Queue<Client> waitList = new LinkedList<>();
     
@@ -29,69 +29,56 @@ public class SeatSection {
         }
     }
 
-    public void pickSeat(Scanner scanner, Client client) {
-        if (this.getRemaining() < 0) {
+    public void cancelReservation(Scanner scanner, Client client) {
+        if (this.getTaken() == 0) {
+            System.out.println("Sorry, there are no seats to cancel. All the seats are empty!");
+            askForWaitlist(scanner, client);
+        }
+
+        while (true) {
+            // Pick a seat
+            int seatIndex = Seat.pick(scanner, this.getCapacity());
+            if (seatIndex == -1) return;
+
+            // Ensure the seat is available
+            Seat seatToRemove = client.returnSeat(seatIndex);
+            if (seatToRemove == null) {
+                System.out.println("This seat has not been reserved.");
+            } else {
+                System.out.println("Canceled the reservation for: " + seatToRemove);
+                break;
+            }
+        }
+    }
+
+    public void reserveSeat(Scanner scanner, Client client) {
+        if (this.getRemaining() == 0) {
             System.out.println("Sorry, there is no more space in the requested section.");
             askForWaitlist(scanner, client);
         }
 
         while (true) {
-            char row = '#';
-            int col = -1;
-    
-            // Input row
-            System.out.print("Enter the row of your seat (A-Y): ");
-            row = scanner.nextLine().charAt(0);
-            while (row < 'A' || row > 'Y') {
-                System.out.print("Try again, enter the row of your seat (A-Y): ");
-                row = scanner.nextLine().charAt(0);
-            }
-    
-            // Input column
-            int maxColumn = this.getCapacity() / 25;
-            System.out.print("Enter the number of your seat (1-" + maxColumn + "): ");
-            try { col = Integer.parseInt(scanner.nextLine()); } catch (Exception e) {}
-            while (col < 1 || col > maxColumn) {
-                System.out.print("Try again, enter the number of your seat (1-" + maxColumn + "): ");
-                try { col = Integer.parseInt(scanner.nextLine()); } catch (Exception e) {}
-            }
+            // Pick a seat
+            int seatIndex = Seat.pick(scanner, this.getCapacity());
+            if (seatIndex == -1) return;
 
             // Ensure the seat is available
-            int number = Seat.numberFrom(row, col);
-            Seat reservedSeat = this.reserveSeat(client, number);
+            Seat reservedSeat = this.tryGetAvailableSeat(seatIndex);
             if (reservedSeat == null) {
                 System.out.println("This seat is not available.");
                 continue;
             } else {
+                client.take(reservedSeat);
                 System.out.println("Successfully purchased " + reservedSeat);
+                System.out.println("This cost " + this.cost);
                 break;
             }
 
         }
     }
-    public void askForWaitlist(Scanner scanner, Client client) {
-        while (true) {
-            System.out.println("Would you like to enter the waitlist?");
-            switch (scanner.nextLine().toLowerCase()) {
-                case "yes", "y" -> {
-                    addToWaitlist(client);
-                    return;
-                }
-                case "no", "n" -> { return; }
-                default -> System.out.println("Please enter a valid option. (Y/N)");
-            }
-        }
-    }
 
-    public Seat reserveRandomSeat(Client client) {
-        if (this.availableSeats.size() == 0) return null;
-        Seat foundSeat = this.availableSeats.iterator().next();
-        this.availableSeats.remove(foundSeat);
-        this.takeSeat(client, foundSeat);
-        return foundSeat;
-    }
-
-    public Seat reserveSeat(Client client, int number) {
+    public Seat tryGetAvailableSeat(int number) {
+        // Find the seat (if any)
         Seat foundSeat = null;
         for (Seat s : this.availableSeats) {
             if (s.number == number) {
@@ -99,19 +86,27 @@ public class SeatSection {
                 break;
             }
         }
-
-        if (foundSeat == null) return null;
-
-        // Make seat "taken"
-        this.availableSeats.remove(foundSeat);
-        this.takeSeat(client, foundSeat);
-
         return foundSeat;
     }
 
+    public void askForWaitlist(Scanner scanner, Client client) {
+        if (StadiumSeats.askYesNo("Would you like to enter the waitlist?")) {
+            addToWaitlist(client);
+        }
+    }
+
+    
     public void addToWaitlist(Client client) {
         this.waitList.add(client);
         updateWaitlist();
+    }
+    
+    public Seat reserveRandomSeat(Client client) {
+        if (this.availableSeats.size() == 0) return null;
+        Seat foundSeat = this.availableSeats.iterator().next();
+        this.availableSeats.remove(foundSeat);
+        foundSeat.take(client);
+        return foundSeat;
     }
 
     /** Updates the waitlist, granting random seats to waitlisted clients. */
@@ -121,17 +116,14 @@ public class SeatSection {
         }
     }
 
-    // Removes the changes from your last reservation
-    public  void removeReservation(){
-        Log entry = reservationStack.pop();
-        
-    }
-
     public int getCapacity() {
         return capacity;
     }
     public int getRemaining() {
         return this.availableSeats.size();
+    }
+    public int getTaken() {
+        return this.takenSeats.size();
     }
 
     public String getDisplayID() {
@@ -149,16 +141,6 @@ public class SeatSection {
 
     public String getLevel() {
         return this.level;
-    }
-
-    public void takeSeat(Client client, Seat seat) {
-        if (this.takenSeats.containsKey(client)) {
-            this.takenSeats.get(client).add(seat);
-        }
-        else {
-            this.takenSeats.put(client, new ArrayList<>());
-            this.takenSeats.get(client).add(seat);
-        }
     }
 
     public Seat containsSeat(Client client, int seatNum) {
