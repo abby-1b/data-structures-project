@@ -1,10 +1,12 @@
 package src;
 
+import java.util.Stack;
 // package src.main;
 public class Client {
     String name;
     String email;
     String number;
+    Stack<Seat> reservedSeats = new Stack<>();
 
     Client(String name, String email, String number) {
         this.name = name;

@@ -1,19 +1,22 @@
 package src;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Scanner;
+import java.util.Stack;
 
 public class SeatSection {
     private String level;
     private String cost;
     private int capacity;
 
-    private HashSet<Seat> availableSeats = new HashSet<>();
-    private HashMap<Client, Seat> takenSeats = new HashMap<>();
+    public HashSet<Seat> availableSeats = new HashSet<>();
+    public HashMap<Client, ArrayList<Seat>> takenSeats = new HashMap<>();
 
-    private Queue<Client> waitList = new LinkedList<>();
+    public Queue<Client> waitList = new LinkedList<>();
+    
 
     public SeatSection(String level, String cost, int capacity) {
         this.level = level;
@@ -84,7 +87,7 @@ public class SeatSection {
         if (this.availableSeats.size() == 0) return null;
         Seat foundSeat = this.availableSeats.iterator().next();
         this.availableSeats.remove(foundSeat);
-        this.takenSeats.put(client, foundSeat);
+        this.takeSeat(client, foundSeat);
         return foundSeat;
     }
 
@@ -101,7 +104,7 @@ public class SeatSection {
 
         // Make seat "taken"
         this.availableSeats.remove(foundSeat);
-        this.takenSeats.put(client, foundSeat);
+        this.takeSeat(client, foundSeat);
 
         return foundSeat;
     }
@@ -116,6 +119,12 @@ public class SeatSection {
         while (this.getRemaining() > 0 && this.waitList.size() > 0) {
             this.reserveRandomSeat(this.waitList.remove());
         }
+    }
+
+    // Removes the changes from your last reservation
+    public  void removeReservation(){
+        Log entry = reservationStack.pop();
+        
     }
 
     public int getCapacity() {
@@ -141,4 +150,27 @@ public class SeatSection {
     public String getLevel() {
         return this.level;
     }
+
+    public void takeSeat(Client client, Seat seat) {
+        if (this.takenSeats.containsKey(client)) {
+            this.takenSeats.get(client).add(seat);
+        }
+        else {
+            this.takenSeats.put(client, new ArrayList<>());
+            this.takenSeats.get(client).add(seat);
+        }
+    }
+
+    public Seat containsSeat(Client client, int seatNum) {
+        if (this.takenSeats.containsKey(client)) {
+            for (Seat s : this.takenSeats.get(client)) {
+                if (s.number == seatNum) {
+                    return s;
+                }
+            }
+        }
+
+        return null;
+    }
+
 }
