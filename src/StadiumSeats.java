@@ -14,7 +14,6 @@ public class StadiumSeats {
     static SeatSection grandStandSeats = new SeatSection("GrandStand", "$45.00", 2000);
 
     static LinkedList<Log> history = new LinkedList<>();
-    static Stack<Log> clientHistory = new Stack<>();
 
     static Scanner scanner;
 
