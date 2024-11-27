@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Scanner;
-import java.util.Stack;
 
 public class SeatSection {
     private String level;
@@ -40,8 +39,9 @@ public class SeatSection {
             int col = -1;
     
             // Input row
-            System.out.print("Enter the row of your seat (A-Y): ");
+            System.out.print("Enter the row of your seat (A-Y); or enter Z to exit: ");
             row = scanner.nextLine().charAt(0);
+            if (row == 'z' || row == 'Z') return;
             while (row < 'A' || row > 'Y') {
                 System.out.print("Try again, enter the row of your seat (A-Y): ");
                 row = scanner.nextLine().charAt(0);
@@ -119,12 +119,6 @@ public class SeatSection {
         while (this.getRemaining() > 0 && this.waitList.size() > 0) {
             this.reserveRandomSeat(this.waitList.remove());
         }
-    }
-
-    // Removes the changes from your last reservation
-    public  void removeReservation(){
-        Log entry = reservationStack.pop();
-        
     }
 
     public int getCapacity() {

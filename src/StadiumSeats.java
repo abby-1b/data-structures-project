@@ -13,7 +13,6 @@ public class StadiumSeats {
     static SeatSection grandStandSeats = new SeatSection("GrandStand", "$45.00", 2000);
 
     static LinkedList<Log> history = new LinkedList<>();
-    static Stack<Log> clientHistory = new Stack<>();
 
     static Scanner scanner;
 
@@ -84,8 +83,8 @@ public class StadiumSeats {
             if (seatToRemove == null) {
                 System.out.println("This seat has not been reserved.");
             } else {
-                System.out.println("You have canceled you reservation for: " + seatToRemove);
                 cancelReservationHelper(client, seatToRemove);
+                System.out.println("You have canceled you reservation for: " + seatToRemove);
                 break;
             }
         }
@@ -96,6 +95,7 @@ public class StadiumSeats {
         for (int i = 0; i < client.reservedSeats.size(); i++) {
             if (client.reservedSeats.peek() == seat) {
                 client.reservedSeats.pop();
+                break;
             }
 
             tempStack.add(client.reservedSeats.pop());
@@ -214,8 +214,8 @@ public class StadiumSeats {
     }
 
     public static void purchaseSeat(Client client) {
-        // System.out.println("Which seat would you like to purchase?");
-        // System.out.println("Enter the number for the seat you want to purchase (e.g. 1 for a Field seat) or enter 0 to exit.\n");
+        System.out.println("Which seat would you like to purchase?");
+        System.out.println("Enter the number for the seat you want to purchase (e.g. 1 for a Field seat) or enter 0 to exit.\n");
 
         // System.out.println("(0) Cancel");
         // System.out.println("(1) " + fieldSeats);
