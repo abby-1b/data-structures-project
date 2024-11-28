@@ -3,8 +3,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Scanner;
-import java.util.Stack;
-import src.Log.TransactionType;
 
 public class StadiumSeats {
     static HashMap<String, Client> clientDatabase = new HashMap<>();
@@ -15,6 +13,7 @@ public class StadiumSeats {
 
     static LinkedList<Log> history = new LinkedList<>();
 
+    // This scanner is both opened and closed in `main()`!
     static Scanner scanner;
 
     private static void printMenuHeader(String head) {
@@ -84,11 +83,11 @@ public class StadiumSeats {
 
     public static boolean askYesNo(String question) {
         while (true) {
-            System.out.println(question);
+            System.out.println(question + " (Y/N)");
             switch (scanner.nextLine().toLowerCase()) {
                 case "yes", "y" -> { return true; }
                 case "no", "n" -> { return false; }
-                default -> System.out.println("Please enter a valid option. (Y/N)");
+                default -> System.out.println("Please enter a valid option.");
             }
         }
     }
@@ -103,10 +102,10 @@ public class StadiumSeats {
         int logCount = history.size();
         int showLogs = 0;
         if (logCount > 10) {
-            System.out.print("How many logs would you like to see? (0-" + logCount + "): ");
+            System.out.print("How many logs to display? (0-" + logCount + "): ");
             try { showLogs = Integer.parseInt(scanner.nextLine()); } catch (Exception e) {}
             while (showLogs < 1 || showLogs > logCount) {
-                System.out.print("Try again, how many logs would you like to see? (0-" + logCount + "): ");
+                System.out.print("Try again, how many logs to display? (0-" + logCount + "): ");
                 try { showLogs = Integer.parseInt(scanner.nextLine()); } catch (Exception e) {}
             }
         } else {
@@ -148,13 +147,13 @@ public class StadiumSeats {
     }
 
     public static void cancelReservation(Client client) {
-        SeatSection section = getSection("Enter the section of the seat you'd like to cancel:");
+        SeatSection section = getSection("Enter the section of the seat to be to canceled:");
         if (section == null) return;
         section.cancelReservation(scanner, client);
     }
 
     public static void purchaseSeat(Client client) {
-        SeatSection section = getSection("Enter the section of the seat you'd like to reserve:");
+        SeatSection section = getSection("Enter the section of the seat to be to reserved:");
         if (section == null) return;
         section.reserveSeat(scanner, client);
     }

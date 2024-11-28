@@ -44,7 +44,7 @@ public class Client {
         }
 
         Log action = this.history.pop();
-        if (!StadiumSeats.askYesNo("Would you like to undo " + action + "?")) {
+        if (!StadiumSeats.askYesNo("Undo " + action + "?")) {
             return;
         }
 
@@ -54,13 +54,13 @@ public class Client {
             // Pop from history, because the above function adds a log to it
             this.history.pop();
 
-            System.out.println("You have canceled the reservation for: " + seat);
+            System.out.println("Canceled the reservation for: " + seat);
         } else {
             this.take(seat);
             // Pop from history, because the above function adds a log to it
             this.history.pop();
 
-            System.out.println("You have re-taken the seat: " + seat);
+            System.out.println("Re-reserved the seat: " + seat);
         }
     }
 
@@ -122,6 +122,16 @@ public class Client {
         StadiumSeats.history.add(log);
 
         return seat;
+    }
+
+    /**
+     * Gets the amount of seats this client has taken.
+     * @return The amount of reserved seats
+     * Called by `SeatSection.cancelReservation()` to ensure the client has
+     * seats to cancel before prompting the user.
+     */
+    public int getTakenSeats() {
+        return this.allReservedSeats.size();
     }
 
     /** Displays the client as a prettified string. */

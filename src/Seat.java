@@ -81,20 +81,20 @@ public class Seat {
         int col = -1;
 
         // Input row
-        System.out.print("Enter the row of your seat (A-Y), or enter 'Z' to exit: ");
+        System.out.print("Enter the seat's row (A-Y), or enter 'Z' to exit: ");
         row = StadiumSeats.askForChar(scanner);
         if (row == 'z' || row == 'Z') return -1;
         while (row < 'A' || row > 'Y') {
-            System.out.print("Try again, enter the row of your seat (A-Y): ");
+            System.out.print("Try again, enter the seat's row (A-Y): ");
             row = StadiumSeats.askForChar(scanner);
         }
 
         // Input column
         int maxColumn = capacity / 25;
-        System.out.print("Enter the number of your seat (1-" + maxColumn + "): ");
+        System.out.print("Enter the seat's number (1-" + maxColumn + "): ");
         try { col = Integer.parseInt(scanner.nextLine()); } catch (Exception e) {}
         while (col < 1 || col > maxColumn) {
-            System.out.print("Try again, enter the number of your seat (1-" + maxColumn + "): ");
+            System.out.print("Try again, enter the seat's number (1-" + maxColumn + "): ");
             try { col = Integer.parseInt(scanner.nextLine()); } catch (Exception e) {}
         }
 
