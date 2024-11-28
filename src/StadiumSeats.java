@@ -3,7 +3,21 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Scanner;
+import java.util.Stack;
 
+/**
+ * Calls methods from other classes and provides some common methods (mostly for
+ * user input). It handles the menu and its basic tasks, which themselves call
+ * other functions.
+ * 
+ * It uses a HashMap for clientDatabase, which stores different clients along
+ * with their histories. This means that although we have a global history, it's
+ * only used as a log. Client undo is handled in the `Client` object itself,
+ * completely independent of other clients. A hashmap is used because it can
+ * quickly look up client names and return the corresponding client object.
+ * 
+ * A linked list is used to store the local history, which is only added to.
+ */
 public class StadiumSeats {
     static HashMap<String, Client> clientDatabase = new HashMap<>();
 
@@ -16,11 +30,25 @@ public class StadiumSeats {
     // This scanner is both opened and closed in `main()`!
     static Scanner scanner;
 
+    /**
+     * Prints a menu header with the given text.
+     * @param head The message printed in the middle of the header
+     * Called multiple times within `menu()`.
+     */
     private static void printMenuHeader(String head) {
         String outline = "---------------------------------------";
         System.out.println("/" + outline + head + outline + "/" + "\n");
     }
 
+    /**
+     * A main menu system where users interact with the application.
+     * 
+     * Calls other functions like `purchaseSeat(currClient)`,
+     * `displayAvailability()`, `cancelReservation(currClient)`,
+     * `Client.undo()`, `getClientInformation()`, and `showLogs()`.
+     * 
+     * Only called by `main()`.
+     */
     public static void menu() {
         Client currClient = getClientInformation();
 
@@ -81,6 +109,11 @@ public class StadiumSeats {
 
     }
 
+    /**
+     * Prompts a yes/no question to the user
+     * @param question The question to ask to the user
+     * Called by `SeatSection.askForWaitlist()` and `Client.undo()`.
+     */
     public static boolean askYesNo(String question) {
         while (true) {
             System.out.println(question + " (Y/N)");
@@ -92,16 +125,33 @@ public class StadiumSeats {
         }
     }
 
+    /**
+     * Asks for a single character. If no character is supplied (enter is
+     * pressed), returns a null character (0).
+     * @return The given single character.
+     * Only called by `Seat.pick()`.
+     */
     public static char askForChar(Scanner scanner) {
         String l = scanner.nextLine();
         if (l.length() == 0) return '\0';
         else return l.charAt(0);
     }
 
+    /**
+     * Shows the global transaction history.
+     * 
+     * If there are more than 10 logs, the user is asked how many logs they want
+     * to see. To do this, the list of logs is traversed backwards and put into
+     * a stack, which is then popped from. This reverses and then un-reverses
+     * the order of the requested logs, displaying them properly.
+     * 
+     * Called by `menu()`.
+     */
     public static void showLogs() {
         int logCount = history.size();
         int showLogs = 0;
         if (logCount > 10) {
+            // Too many logs, ask for an amount
             System.out.print("How many logs to display? (0-" + logCount + "): ");
             try { showLogs = Integer.parseInt(scanner.nextLine()); } catch (Exception e) {}
             while (showLogs < 1 || showLogs > logCount) {
@@ -109,21 +159,34 @@ public class StadiumSeats {
                 try { showLogs = Integer.parseInt(scanner.nextLine()); } catch (Exception e) {}
             }
         } else {
+            // Just show all the logs
             showLogs = logCount;
         }
 
+        Stack<Log> logs = new Stack<>();
         Iterator<Log> iter = history.descendingIterator();
-        for (int i = 0; i < showLogs; i++) {
-            System.out.println(iter.next());
-        }
+        for (int i = 0; i < showLogs; i++) logs.add(iter.next());
+        while (!logs.isEmpty()) System.out.println(logs.pop());
     }
 
+    /**
+     * Displays the avialable seats in each section.
+     * Calls `SeatSection.displayAvailability()` on all sections.
+     * Called within `menu()`.
+     */
     public static void displayAvailability() {
         fieldSeats.displayAvailability();
         mainSeats.displayAvailability();
         grandStandSeats.displayAvailability();
     }
 
+    /**
+     * Asks the user to pick a section
+     * @param message The message to print before picking a section
+     * @return The picked section, or null if cancelled
+     * 
+     * This is called by `cancelReservation()` and `purchaseSeat()`.
+     */
     public static SeatSection getSection(String message) {
         System.out.println(message);
         System.out.println("(0) Cancel");
@@ -146,42 +209,62 @@ public class StadiumSeats {
         return selectedSection;
     }
 
-    public static void cancelReservation(Client client) {
-        SeatSection section = getSection("Enter the section of the seat to be to canceled:");
-        if (section == null) return;
-        section.cancelReservation(scanner, client);
-    }
-
+    /**
+     * Makes a reservation for a client.
+     * @param client The client to make a reservation for
+     * Called by `menu()`.
+     */
     public static void purchaseSeat(Client client) {
         SeatSection section = getSection("Enter the section of the seat to be to reserved:");
         if (section == null) return;
         section.reserveSeat(scanner, client);
     }
 
+    /**
+     * Cancels a reservation for a client.
+     * @param client The client to cancel a reservation for
+     * Called by `menu()`.
+     */
+    public static void cancelReservation(Client client) {
+        SeatSection section = getSection("Enter the section of the seat to be to canceled:");
+        if (section == null) return;
+        section.cancelReservation(scanner, client);
+    }
+
+    /**
+     * Asks for client information, using their name as a key.
+     * If an existing name is provided, the email and phone number is changed to
+     * fit the previously existing client. If no client existed, one is created
+     * and added to the database.
+     * @returns The requested client
+     * Called by `menu()`.
+     */
     public static Client getClientInformation() {
         System.out.print("Name: ");
         String name = scanner.nextLine();
 
-        System.out.print("Email addres: ");
-        String email = scanner.nextLine();
-
-        System.out.print("Phone number: ");
-        String number = scanner.nextLine();
-
         if (clientDatabase.containsKey(name)) {
-            // Fetch and update the pre-existing client object
+            // Fetch the pre-existing client object
             Client c = clientDatabase.get(name);
-            c.email = email;
-            c.number = number;
             return c;
         } else {
+            // Ask for the remaining information
+            System.out.print("Email addres: ");
+            String email = scanner.nextLine();
+
+            System.out.print("Phone number: ");
+            String number = scanner.nextLine();
+
             // Create a new client object (and store it in the database)
             return new Client(name, email, number);
         }
-
-
     }
 
+    /**
+     * Entry point for the program. Builds and destroys the scanner.
+     * Calls the `menu()` function, which then handles all the requested user
+     * operations and looping.
+     */
     public static void main(String[] args) {
         scanner = new Scanner(System.in);
         menu();
