@@ -1,6 +1,18 @@
 package src;
 
+/**
+ * Records transactions made by clients. 
+ * 
+ * Each log entry contains details about the client, the seat they interacted
+ * with, and the type of transaction (purchase or cancellation).
+ */
 public class Log {
+
+    /**
+     * Represents the type of a transaction
+     *  - PURCHASE: Indicates that the client purchased a seat
+     *  - CANCEL: Indicates that the client canceled a reservation
+     */
     public enum TransactionType {
         PURCHASE,
         CANCEL,
@@ -16,20 +28,26 @@ public class Log {
         this.type = type;
     }
 
-    public Client getClient() { return client; }
+    /**
+     * Gets the seat involved in this log entry.
+     * @return The seat that was purchased or canceled.
+     * 
+     * Only called by `Client.undo()` to perform actions on a log (history).
+     */
     public Seat getSeat() { return seat; }
-    public int getSeatNum() { return seat.number; }
+
+    /**
+     * Gets the type of transaction for this log entry.
+     * @return The type of transaction (PURCHASE or CANCEL).
+     * 
+     * Only called by `Client.undo()` to perform actions on a log (history).
+     */
     public TransactionType getType() { return this.type; }
 
     @Override
     public String toString() {
-        String out = "[" + this.client + "] ";
-        if (this.type == TransactionType.PURCHASE) {
-            out += "purchased";
-        } else {
-            out += "canceled";
-        }
-        out += this.seat;
-        return out;
+        return "[" + this.client + "] " +
+            (this.type == TransactionType.PURCHASE ? "purchased" : "canceled") +
+            this.seat;
     }
 }
