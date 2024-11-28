@@ -4,6 +4,16 @@ import java.util.HashSet;
 import java.util.Stack;
 import src.Log.TransactionType;
 
+/**
+ * The client class holds all client information: name, email, and phone number.
+ * 
+ * It uses a stack to hold its own history, so doing "undo" on a client only
+ * affects the client the action was performed on. The stack is used because a
+ * client's history only needs to be accessed in a LIFO manner. It stores a set
+ * of logs, as these provide a way to print the requested undo operation and
+ * store the state of purchased/cancelled. This means that you can undo a cancel
+ * action!
+ */
 public class Client {
     String name;
     String email;
@@ -18,12 +28,15 @@ public class Client {
         this.number = number;
     }
 
-    void printData() {
-        System.out.println("Name: " + name);
-        System.out.println("Email: " + email);
-        System.out.println("Phone: " + number);
-    }
-
+    /**
+     * Un-does an action, whether it be a reservation or cancellation.
+     * Undos themselves cannot be undone.
+     * 
+     * This calls either `returnSeat()` or `take()` depending on the last action
+     * performed.
+     * 
+     * This method is only called directly by the menu in `StadiumSeats.menu()`.
+     */
     public void undo() {
         if (this.history.isEmpty()) {
             System.out.println("No action to perform.");
@@ -38,18 +51,30 @@ public class Client {
         Seat seat = action.getSeat();
         if (action.getType() == TransactionType.PURCHASE) {
             this.returnSeat(seat.number);
-            System.out.println("You have canceled the reservation for: " + seat);
+            // Pop from history, because the above function adds a log to it
             this.history.pop();
+
+            System.out.println("You have canceled the reservation for: " + seat);
         } else {
             this.take(seat);
-            System.out.println("You have re-taken the seat: " + seat);
+            // Pop from history, because the above function adds a log to it
             this.history.pop();
+
+            System.out.println("You have re-taken the seat: " + seat);
         }
     }
 
     /**
      * Adds a seat to the client's history
      * @param seat The new seat
+     * 
+     * This method calls the given seat's `Seat.take()` method, which handles
+     * all the reservations within `SeatSection`. It also adds the transaction
+     * to both its personal history (for undo) and the global history (for
+     * general logging).
+     * 
+     * This method is called by `SeatSection.reserveRandomSeat()` (which is a
+     * waitlist method), `SeatSection.reserveSeat()`, and `this.undo()`.
      */
     public void take(Seat seat) {
         // Make seat "taken"
@@ -65,9 +90,16 @@ public class Client {
     }
 
     /**
-     * Remoun-reserves a seat
-     * @param seatIndex
-     * @return
+     * Un-reserves a reserved seat, canceling its reservation.
+     * @param seatIndex The index of the seat to be returned
+     * @return The seat that was un-reserved
+     * 
+     * This method calls `Seat.returnSeat()` which itself handles the movement
+     * within `SeatSection`. It also adds the transaction to both its personal
+     * history (for undo) and the global history (for general logging).
+     * 
+     * This is called from `SeatSection.cancelReservation()` and
+     * `this.undo()`.
      */
     public Seat returnSeat(int seatIndex) {
         // Find and remove seat from reserved set (fast)
@@ -92,8 +124,9 @@ public class Client {
         return seat;
     }
 
+    /** Displays the client as a prettified string. */
     @Override
     public String toString() {
-        return this.name;
+        return this.name + " (" + this.email + ")";
     }
 }

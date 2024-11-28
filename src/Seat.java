@@ -4,6 +4,9 @@ import java.util.HashSet;
 import java.util.Scanner;
 
 /**
+ * A single seat, with its seat index and a way to display its prettified ID
+ * (like `A12` for seat index `11`).
+ * 
  * The seat class uses no convoluted data structures outside of ones we defined,
  * which are documented in their respective files.
  * 

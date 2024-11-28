@@ -32,7 +32,7 @@ public class SeatSection {
     public void cancelReservation(Scanner scanner, Client client) {
         if (this.getTaken() == 0) {
             System.out.println("Sorry, there are no seats to cancel. All the seats are empty!");
-            askForWaitlist(scanner, client);
+            return;
         }
 
         while (true) {
@@ -55,6 +55,7 @@ public class SeatSection {
         if (this.getRemaining() == 0) {
             System.out.println("Sorry, there is no more space in the requested section.");
             askForWaitlist(scanner, client);
+            return;
         }
 
         while (true) {
@@ -104,8 +105,7 @@ public class SeatSection {
     public Seat reserveRandomSeat(Client client) {
         if (this.availableSeats.size() == 0) return null;
         Seat foundSeat = this.availableSeats.iterator().next();
-        this.availableSeats.remove(foundSeat);
-        foundSeat.take(client);
+        client.take(foundSeat);
         return foundSeat;
     }
 
