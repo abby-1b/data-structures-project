@@ -3,23 +3,35 @@ package src;
 import java.util.HashSet;
 import java.util.Scanner;
 
+/**
+ * The seat class uses no convoluted data structures outside of ones we defined,
+ * which are documented in their respective files.
+ * 
+ * Each seat stores a reference to its parent section, which remains static
+ * throughout its lifetime. It also has a reference to the client that currently
+ * owns this seat. When the seat is not reserved, the client is null.
+ */
 public class Seat {
-    SeatSection section;
+    final SeatSection section;
     int number;
-    Client client; // The client this seat belongs to
+
+    /** The client this seat belongs to */
+    Client client;
 
     public Seat(SeatSection section, int number) {
         this.section = section;
         this.number = number;
     }
-    public Seat(SeatSection section, char row, int column) {
-        this.section = section;
-        this.number = Seat.numberFrom(row, column);
-    }
 
     /**
-     * Takes a seat, making it unavailable
-     * @param client
+     * Takes a seat, making it unavailable.
+     * @param client The client that is taking this seat.
+     * 
+     * This function updates the section's waitlist, because when it's
+     * taken it _could_ just be switching from one client to another. It also
+     * modifies the parent section's available/taken seats.
+     * 
+     * It's only called from the `Client.take()` method.
      */
     public void take(Client client) {
         this.client = client;
@@ -32,7 +44,13 @@ public class Seat {
     }
 
     /**
-     * Returns a seat, making it not be "taken" anymore
+     * Un-reserves a seat, making it not be taken anymore.
+     * 
+     * This function updates the waitlist, as it's now an available seat for
+     * some other customer. It also updates the parent section's available/taken
+     * seats.
+     * 
+     * It's only called from the `Client.returnSeat()` method.
      */
     public void returnSeat() {
         if (this.client == null) { throw new Error("Seat not taken!"); }
@@ -44,9 +62,16 @@ public class Seat {
 
     /**
      * Asks the user to pick a seat.
-     * This doesn't perform any reservations, only asks for a seat.
+     * This doesn't perform any reservations, only asks for a seat!
      * @param scanner The input scanner
      * @return The selected seat index
+     * 
+     * Apart from the basic scanner methods and print, this method only calls
+     * `Seat.numberFrom(row, col)`, which converts the picked row and column
+     * into a valid seat index.
+     * 
+     * This is called in both `SeatSection.reserveSeat()` and
+     * `SeatSection.cancelReservation()`, as it's only a helper method.
      */
     public static int pick(Scanner scanner, int capacity) {
         char row = '#';
@@ -54,11 +79,11 @@ public class Seat {
 
         // Input row
         System.out.print("Enter the row of your seat (A-Y), or enter 'Z' to exit: ");
-        row = scanner.nextLine().charAt(0);
+        row = StadiumSeats.askForChar(scanner);
         if (row == 'z' || row == 'Z') return -1;
         while (row < 'A' || row > 'Y') {
             System.out.print("Try again, enter the row of your seat (A-Y): ");
-            row = scanner.nextLine().charAt(0);
+            row = StadiumSeats.askForChar(scanner);
         }
 
         // Input column
@@ -79,21 +104,36 @@ public class Seat {
      * @param row The given row
      * @param column The given column
      * @return The seat index, a single integer
+     * 
+     * This method calls no outside methods.
+     * 
+     * This method is only called internally, to convert row and column indices
+     * into a single seat index in the constructor and seat picker.
      */
-    public static int numberFrom(char row, int column) {
+    private static int numberFrom(char row, int column) {
         return (int)(row - 'A') + (column - 1) * 25;
     }
 
     /**
-     * Displays a seat index (single integer) as a user-friendly row and column
+     * Returns a seat index (single integer) as a user-friendly row and column
      * @param number The seat index
-     * @return 
+     * @return A prettified displayable seat string
+     * 
+     * This method calls no outside methods.
+     * 
+     * This method is only called in `toString()`.
      */
     private static String toStringFromNumber(int number) {
         return "" + (char)('A' + (number % 25)) + (number / 25 + 1);
     }
 
-    /** Returns the seat as a prettified string */
+    /**
+     * Returns the seat as a prettified string
+     * @return The seat, including its section, as a prettified string.
+     * 
+     * This method calls `toStringFromNumber()` and the parent section's
+     * `.getLevel()` to get the level as a string with no other information.
+     */
     @Override
     public String toString() {
         return section.getLevel() + " " + toStringFromNumber(this.number);

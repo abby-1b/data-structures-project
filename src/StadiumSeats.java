@@ -93,6 +93,12 @@ public class StadiumSeats {
         }
     }
 
+    public static char askForChar(Scanner scanner) {
+        String l = scanner.nextLine();
+        if (l.length() == 0) return '\0';
+        else return l.charAt(0);
+    }
+
     public static void showLogs() {
         int logCount = history.size();
         int showLogs = 0;
